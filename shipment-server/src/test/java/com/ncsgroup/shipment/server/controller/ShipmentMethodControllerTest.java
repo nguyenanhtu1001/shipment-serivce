@@ -1,14 +1,14 @@
 package com.ncsgroup.shipment.server.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ncsgroup.shipment.server.dto.shipmentmethod.ShipmentMethodPageResponse;
+import com.ncsgroup.shipment.server.dto.PageResponse;
 import com.ncsgroup.shipment.server.dto.shipmentmethod.ShipmentMethodResponse;
 import com.ncsgroup.shipment.server.entity.ShipmentMethod;
 import com.ncsgroup.shipment.server.exception.shipmentmethod.ShipmentMethodAlreadyExistException;
 import com.ncsgroup.shipment.server.exception.shipmentmethod.ShipmentMethodNotFoundException;
 import com.ncsgroup.shipment.server.service.MessageService;
 import com.ncsgroup.shipment.server.service.ShipmentMethodService;
-import dto.ShipmentMethodRequest;
+import com.ncsgroup.shipment.client.dto.ShipmentMethodRequest;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -50,13 +50,23 @@ public class ShipmentMethodControllerTest {
     ShipmentMethodRequest request = new ShipmentMethodRequest();
     request.setName("van chuyen nhanh");
     request.setDescription("phuong thuc van chuyen nhanh");
-    request.setPricePerKilometer(20000);
+    request.setPricePerKilometer(20000.0);
     return request;
   }
 
   private ShipmentMethod mockShipmentMethod(ShipmentMethodRequest request) {
     return ShipmentMethod.from(request.getName(), request.getDescription(), request.getPricePerKilometer());
   }
+
+  private ShipmentMethodResponse mockResponse() {
+    ShipmentMethodResponse response = new ShipmentMethodResponse();
+    response.setId(mockId);
+    response.setName("Giao hang nhanh");
+    response.setDescription("Van chuyen trong ngay");
+    response.setPricePerKilometer(20000.0);
+    return response;
+  }
+
 
   @Test
   void testCreate_WhenCreatedShipmentMethodSuccessfully_Return201() throws Exception {
@@ -95,7 +105,7 @@ public class ShipmentMethodControllerTest {
           .andDo(print())
           .andExpect(status().isBadRequest())
           .andExpect(jsonPath("$.data.code")
-                .value("com.ncsgroup.shipment.server.exception.shipmentmethod.ShipmentAlreadyExistException"));
+                .value("com.ncsgroup.shipment.server.exception.shipmentmethod.ShipmentMethodAlreadyExistException"));
   }
 
   @Test
@@ -110,7 +120,7 @@ public class ShipmentMethodControllerTest {
           .andDo(print())
           .andExpect(status().isBadRequest())
           .andExpect(jsonPath("$.data.code")
-                .value("name cannot be empty"));
+                .value("com.ncsgroup.shipment.client.dto.name.NotNull"));
     System.out.println(request);
   }
 
@@ -126,9 +136,26 @@ public class ShipmentMethodControllerTest {
           .andDo(print())
           .andExpect(status().isBadRequest())
           .andExpect(jsonPath("$.data.code")
-                .value("description cannot be empty"));
+                .value("com.ncsgroup.shipment.client.dto.description.NotNull"));
     System.out.println(request);
   }
+
+  @Test
+  void tesValid_WhenInputPricePerKilometerShipmentMethodInvalid_Returns400BadRequest() throws Exception {
+    ShipmentMethodRequest request = mockRequest();
+    request.setPricePerKilometer(null);
+    Mockito.when(messageService.getMessage(CREATE_SHIPMENT_METHOD_SUCCESS, "en"))
+          .thenReturn("Create shipment method successfully");
+    mockMvc.perform(post("/api/v1/shipment-methods")
+                .contentType("application/json")
+                .content(objectMapper.writeValueAsString(request)))
+          .andDo(print())
+          .andExpect(status().isBadRequest())
+          .andExpect(jsonPath("$.data.code")
+                .value("com.ncsgroup.shipment.client.dto.pricePerKilometer.NotNull"));
+    System.out.println(request);
+  }
+
 
   @Test
   void testUpdate_WhenUpdateShipmentMethodSuccessfully_Return200() throws Exception {
@@ -182,19 +209,20 @@ public class ShipmentMethodControllerTest {
                       .content(objectMapper.writeValueAsString(request)))
           .andExpect(status().isBadRequest())
           .andExpect(jsonPath("$.data.code")
-                .value("com.ncsgroup.shipment.server.exception.shipmentmethod.ShipmentAlreadyExistException"))
+                .value("com.ncsgroup.shipment.server.exception.shipmentmethod.ShipmentMethodAlreadyExistException"))
           .andReturn();
   }
 
   @Test
   void testList_WhenListIsAll_Returns200AndBody() throws Exception {
-    ShipmentMethodPageResponse mock = new ShipmentMethodPageResponse();
+    PageResponse<ShipmentMethodResponse> mock = new PageResponse<>();
     List<ShipmentMethodResponse> list = new ArrayList<>();
     list.add(ShipmentMethodResponse.from("1", "van chuyen trong ngay", 20));
     list.add(ShipmentMethodResponse.from("2", "van chuyen trong tuan", 20));
     list.add(ShipmentMethodResponse.from("3", "van chuyen trong thang", 20));
 
-    mock.setShipmentMethodResponseList(list);
+    mock.setContent(list);
+    mock.setAmount(list.size());
     Mockito.when(messageService.getMessage(GET_SHIPMENT_METHOD_SUCCESS, "en")).thenReturn("success");
     Mockito.when(shipmentMethodService.list("", 10, 0, true)).thenReturn(mock);
 
@@ -213,13 +241,15 @@ public class ShipmentMethodControllerTest {
 
   @Test
   void testList_WhenSearchByKeywordAndIsAllFalse_Returns200AndBody() throws Exception {
-    ShipmentMethodPageResponse mock = new ShipmentMethodPageResponse();
+    PageResponse<ShipmentMethodResponse> mock = new PageResponse<>();
     List<ShipmentMethodResponse> list = new ArrayList<>();
     list.add(ShipmentMethodResponse.from("1", "van chuyen trong ngay", 20));
     list.add(ShipmentMethodResponse.from("2", "van chuyen trong tuan", 20));
     list.add(ShipmentMethodResponse.from("3", "van chuyen trong thang", 20));
 
-    mock.setShipmentMethodResponseList(list);
+    mock.setContent(list);
+    mock.setAmount(list.size());
+
     Mockito.when(messageService.getMessage(GET_SHIPMENT_METHOD_SUCCESS, "en")).thenReturn("success");
     Mockito.when(shipmentMethodService.list("", 10, 0, false)).thenReturn(mock);
 
@@ -259,6 +289,35 @@ public class ShipmentMethodControllerTest {
                 .value("Delete shipment method successfully"))
           .andReturn();
   }
+
+  @Test
+  void testDetailShipmentMethod_WhenGetDetailShipmentMethodSuccess_Returns200() throws Exception {
+    ShipmentMethodResponse mockResponse = mockResponse();
+    Mockito.when(shipmentMethodService.detail(mockId)).thenReturn(mockResponse);
+    Mockito.when(messageService.getMessage(DETAIL_SHIPMENT_METHOD, "en")).thenReturn("Get detail shipment method successfully");
+    MvcResult mvcResult = mockMvc.perform(
+                get("/api/v1/shipment-methods/{id}", mockId)
+                      .contentType("application/json"))
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$.message")
+                .value("Get detail shipment method successfully"))
+          .andReturn();
+    String responseBody = mvcResult.getResponse().getContentAsString(StandardCharsets.UTF_8);
+    Assertions.assertEquals(responseBody,
+          objectMapper.writeValueAsString(shipmentMethodController.detail(mockId, "en")));
+  }
+
+@Test
+void testDetailShipmentMethod_WhenShipmentMethodNotFound_ReturnsShipmentMethodNotFoundException() throws Exception {
+  Mockito.when(shipmentMethodService.detail(mockId)).thenThrow(new ShipmentMethodNotFoundException());
+  Mockito.when(messageService.getMessage(DETAIL_SHIPMENT_METHOD, "en")).thenReturn("Get detail shipment method success");
+
+  mockMvc.perform(
+              get("/api/v1/shipment-methods/{id}", mockId))
+        .andExpect(status().isNotFound())
+        .andExpect(jsonPath("$.data.code")
+              .value("com.ncsgroup.shipment.server.exception.shipmentmethod.ShipmentMethodNotFoundException"));
+}
 
 }
 

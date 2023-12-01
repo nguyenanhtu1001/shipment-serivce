@@ -8,7 +8,7 @@ import com.ncsgroup.shipment.server.entity.address.District;
 import com.ncsgroup.shipment.server.exception.address.AddressNotFoundException;
 import com.ncsgroup.shipment.server.service.MessageService;
 import com.ncsgroup.shipment.server.service.address.DistrictService;
-import dto.address.SearchDistrictRequest;
+import com.ncsgroup.shipment.client.dto.address.SearchDistrictRequest;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -111,7 +111,6 @@ public class DistrictControllerTest {
           objectMapper.writeValueAsString(districtController.list(null, 10, 0, true, "en")));
   }
 
-  //TODO
   @Test
   void testList_WhenAllFalse_Return200Body() throws Exception {
     DistrictPageResponse mockPage = new DistrictPageResponse();

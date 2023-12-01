@@ -10,7 +10,7 @@ import com.ncsgroup.shipment.server.service.address.AddressService;
 import com.ncsgroup.shipment.server.service.address.DistrictService;
 import com.ncsgroup.shipment.server.service.address.ProvinceService;
 import com.ncsgroup.shipment.server.service.address.WardService;
-import dto.address.AddressRequest;
+import com.ncsgroup.shipment.client.dto.address.AddressRequest;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -123,24 +123,57 @@ public class AddressFacadeTest {
   @Test
   void test_CreateAddress_WhenSuccess_Return_Response() {
     AddressRequest mockRequest = mockAddressRequest();
-    AddressResponse mockServiceResponse = mockServiceResponse();
     AddressResponse mockFacadeResponse = mockFacadeResponse();
 
-    ProvinceInfoResponse mockProvinceInfo = mockProvinceInfo();
-    DistrictInfoResponse mockDistrictInfo = mockDistrictInfo();
-    WardInfoResponse mockWardInfo = mockWardInfo();
-
-    Mockito.when(provinceService.detail(mockRequest.getProvinceCode())).thenReturn(mockProvinceInfo);
-    Mockito.when(districtService.detail(mockRequest.getDistrictCode())).thenReturn(mockDistrictInfo);
-    Mockito.when(wardService.detail(mockRequest.getWardCode())).thenReturn(mockWardInfo);
-    Mockito.when(addressService.create(mockRequest)).thenReturn(mockServiceResponse);
+    Mockito.when(addressService.create(mockRequest)).thenReturn(mockFacadeResponse);
 
     AddressResponse response = addressFacadeService.createAddress(mockRequest);
-
     Assertions.assertThat(response.getProvinces()).isEqualTo(mockFacadeResponse.getProvinces());
     Assertions.assertThat(response.getDistricts()).isEqualTo(mockFacadeResponse.getDistricts());
     Assertions.assertThat(response.getWards()).isEqualTo(mockFacadeResponse.getWards());
     Assertions.assertThat(response.getDetail()).isEqualTo(mockFacadeResponse.getDetail());
   }
+  @Test
+  void testUpdate_WhenProvinceNotFound_Return_AddressNotFound() throws Exception {
+    AddressRequest request = mockAddressRequest();
+    Mockito.doThrow(new AddressNotFoundException(true, false, false)).when(provinceService).checkProvinceExist(request.getProvinceCode());
 
+    Assertions.assertThatThrownBy(() -> addressFacadeService.updateAddress(request,"ok"))
+          .isInstanceOf(AddressNotFoundException.class)
+          .hasFieldOrPropertyWithValue("code", "com.ncsgroup.shipment.server.exception.address.AddressNotFoundException.Province");
+  }
+
+  @Test
+  void testUpdateAddress_WhenDistrictCodeNotFound_Return_AddressNotFound() throws Exception {
+    AddressRequest request = mockAddressRequest();
+    Mockito.doThrow(new AddressNotFoundException(false, true, false)).when(wardService).checkWardExist(request.getWardCode());
+
+    Assertions.assertThatThrownBy(() -> addressFacadeService.updateAddress(request, "test"))
+          .isInstanceOf(AddressNotFoundException.class)
+          .hasFieldOrPropertyWithValue("code", "com.ncsgroup.shipment.server.exception.address.AddressNotFoundException.District");
+  }
+
+  @Test
+  void testUpdateAddress_WhenWardCodeNotFound_Return_AddressNotFound() throws Exception {
+    AddressRequest request = mockAddressRequest();
+    Mockito.doThrow(new AddressNotFoundException(false, false, true)).when(wardService).checkWardExist(request.getWardCode());
+
+    Assertions.assertThatThrownBy(() -> addressFacadeService.updateAddress(request, "test"))
+          .isInstanceOf(AddressNotFoundException.class)
+          .hasFieldOrPropertyWithValue("code", "com.ncsgroup.shipment.server.exception.address.AddressNotFoundException.Ward");
+  }
+  @Test
+  void testUpdate_WhenSuccess_Return_Response() {
+    AddressRequest mockRequest = mockAddressRequest();
+    AddressResponse mockFacadeResponse = mockFacadeResponse();
+    mockFacadeResponse.setId("test");
+    Mockito.when(addressService.update(mockRequest,"test")).thenReturn(mockFacadeResponse);
+
+    AddressResponse response = addressFacadeService.updateAddress(mockRequest,"test");
+    Assertions.assertThat(response.getId()).isEqualTo("test");
+    Assertions.assertThat(response.getProvinces()).isEqualTo(mockFacadeResponse.getProvinces());
+    Assertions.assertThat(response.getDistricts()).isEqualTo(mockFacadeResponse.getDistricts());
+    Assertions.assertThat(response.getWards()).isEqualTo(mockFacadeResponse.getWards());
+    Assertions.assertThat(response.getDetail()).isEqualTo(mockFacadeResponse.getDetail());
+  }
 }

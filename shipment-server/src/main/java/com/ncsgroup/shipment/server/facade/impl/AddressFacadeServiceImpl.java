@@ -6,7 +6,7 @@ import com.ncsgroup.shipment.server.service.address.AddressService;
 import com.ncsgroup.shipment.server.service.address.DistrictService;
 import com.ncsgroup.shipment.server.service.address.ProvinceService;
 import com.ncsgroup.shipment.server.service.address.WardService;
-import dto.address.AddressRequest;
+import com.ncsgroup.shipment.client.dto.address.AddressRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,24 +28,15 @@ public class AddressFacadeServiceImpl implements AddressFacadeService {
 
     this.checkAddressComponentsExist(request);
 
-    AddressResponse response = addressService.create(request);
-
-    this.setProperties(response, request);
-
-    return response;
+    return addressService.create(request);
   }
 
-  private void setProperties(AddressResponse response, AddressRequest request) {
-    log.info("(setProperties)response: {}, request: {}", response, request);
-
-    if (Objects.nonNull(request.getProvinceCode()))
-      response.setProvinces(provinceService.detail(request.getProvinceCode()).getProvinceNameEn());
-
-    if (Objects.nonNull(request.getDistrictCode()))
-      response.setDistricts(districtService.detail(request.getDistrictCode()).getDistrictNameEn());
-
-    if (Objects.nonNull(request.getWardCode()))
-      response.setWards(wardService.detail(request.getWardCode()).getWardNameEn());
+  @Override
+  @Transactional
+  public AddressResponse updateAddress(AddressRequest request, String id) {
+    log.info("(createAddress) request: {}", request);
+    this.checkAddressComponentsExist(request);
+    return addressService.update(request, id);
   }
 
   private void checkAddressComponentsExist(AddressRequest request) {

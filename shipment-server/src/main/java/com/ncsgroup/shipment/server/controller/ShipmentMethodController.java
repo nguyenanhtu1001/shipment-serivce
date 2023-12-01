@@ -1,8 +1,8 @@
 package com.ncsgroup.shipment.server.controller;
 
+import com.ncsgroup.shipment.server.dto.PageResponse;
 import com.ncsgroup.shipment.server.dto.PageResponseGeneral;
 import com.ncsgroup.shipment.server.dto.ResponseGeneral;
-import com.ncsgroup.shipment.server.dto.shipmentmethod.ShipmentMethodPageResponse;
 import com.ncsgroup.shipment.server.dto.shipmentmethod.ShipmentMethodResponse;
 import com.ncsgroup.shipment.server.service.MessageService;
 import com.ncsgroup.shipment.server.service.ShipmentMethodService;
@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 
-import dto.ShipmentMethodRequest;
+import com.ncsgroup.shipment.client.dto.ShipmentMethodRequest;
 
 import static com.ncsgroup.shipment.server.constanst.Constants.CommonConstants.DEFAULT_LANGUAGE;
 import static com.ncsgroup.shipment.server.constanst.Constants.CommonConstants.LANGUAGE;
@@ -31,7 +31,6 @@ public class ShipmentMethodController {
 
   @PostMapping
   @ResponseStatus(HttpStatus.CREATED)
-
   public ResponseGeneral<ShipmentMethodResponse> create(
         @Valid @RequestBody ShipmentMethodRequest request,
         @RequestHeader(name = LANGUAGE, defaultValue = DEFAULT_LANGUAGE) String language
@@ -48,7 +47,7 @@ public class ShipmentMethodController {
         @PathVariable String id,
         @RequestHeader(name = LANGUAGE, defaultValue = DEFAULT_LANGUAGE) String language
   ) {
-    log.info("Update with id: " + id);
+    log.info("Update with id:{}", id);
     return ResponseGeneral.ofSuccess(
           messageService.getMessage(UPDATE_SHIPMENT_METHOD_SUCCESS, language),
           shipmentMethodService.update(id, request)
@@ -56,7 +55,7 @@ public class ShipmentMethodController {
   }
 
   @GetMapping
-  public PageResponseGeneral<ShipmentMethodPageResponse> list(
+  public PageResponseGeneral<PageResponse<ShipmentMethodResponse>> list(
         @RequestParam(name = "keyword", required = false) String keyword,
         @RequestParam(name = "size", defaultValue = "10") int size,
         @RequestParam(name = "page", defaultValue = "0") int page,
@@ -77,5 +76,16 @@ public class ShipmentMethodController {
     log.info("delete by id:{} ", id);
     shipmentMethodService.delete(id);
     return ResponseGeneral.ofSuccess(messageService.getMessage(DELETE_SUCCESS, language));
+  }
+  @GetMapping("/{id}")
+  public ResponseGeneral<ShipmentMethodResponse> detail(
+        @PathVariable String id,
+        @RequestHeader(name = LANGUAGE, defaultValue = DEFAULT_LANGUAGE) String language
+  ) {
+    log.info("detail with id:{}", id);
+    return ResponseGeneral.ofSuccess(
+          messageService.getMessage(DETAIL_SHIPMENT_METHOD, language),
+          shipmentMethodService.detail(id)
+    );
   }
 }

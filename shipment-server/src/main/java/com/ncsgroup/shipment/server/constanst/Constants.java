@@ -42,5 +42,13 @@ public class Constants {
     public static final String DETAIL_WARD = "com.ncsgroup.shipment.server.controller.address.WardController.detail";
     public static final String CREATE_ADDRESS_SUCCESS = "com.ncsgroup.shipment.server.controller.address.AddressController.create";
     public static final String DETAIL_ADDRESS = "com.ncsgroup.shipment.server.controller.address.AddressController.detail";
+    public static final String LIST_ADDRESS= "com.ncsgroup.shipment.server.controller.address.AddressController.list";
+    public static final String UPDATE_ADDRESS = "com.ncsgroup.shipment.server.controller.address.AddressController.update";
+    public static final String DELETE_ADDRESS = "com.ncsgroup.shipment.server.controller.address.AddressController.delete";
+    public static final String CREATE_SHIPMENT_SUCCESS="com.ncsgroup.shipment.server.controller.shipment.create";
+    public static final String DETAIL_SHIPMENT_METHOD= "com.ncsgroup.shipment.server.controller.ShipmentMethodController.detail";
+    public static final String UPDATE_SHIPMENT_SUCCESS="com.ncsgroup.shipment.server.controller.shipment.update";
+    public static final String DELETE_SHIPMENT_SUCCESS="com.ncsgroup.shipment.server.controller.shipment.delete";
+    public static final String DETAIL_SHIPMENT_SUCCESS="com.ncsgroup.shipment.server.controller.shipment.detail";
   }
 }
